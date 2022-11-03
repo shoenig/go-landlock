@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/shoenig/lang"
 )
 
 var (
@@ -31,15 +29,15 @@ func (p *Path) access() rule {
 		switch c {
 		case 'r':
 			directory := fsReadFile | fsReadDir
-			allow |= lang.If(!p.dir, fsReadFile).Else(directory)
+			allow |= IfElse(!p.dir, fsReadFile, directory)
 		case 'w':
 			allow |= fsWriteFile
 		case 'x':
 			allow |= fsExecute
 		case 'c':
 			regular := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock | fsMakeSymlink
-			allow |= lang.If(!p.dir, regular).Else(regular | fsMakeDir)
-			allow |= lang.If(version > 1, fsRefer).Else(0)
+			allow |= IfElse(!p.dir, regular, regular|fsMakeDir)
+			allow |= IfElse(version > 1, fsRefer, 0)
 		}
 	}
 	return allow
@@ -69,7 +67,7 @@ func (p *Path) Hash() string {
 }
 
 func (p *Path) String() string {
-	kind := lang.If(p.dir, "dir").Else("file")
+	kind := IfElse(p.dir, "dir", "file")
 	return fmt.Sprintf("(%s:%s:%s)", p.mode, kind, p.path)
 }
 
@@ -139,7 +137,7 @@ func parsePath(filetype, mode, path string) (*Path, error) {
 	case !IsProperPath(path):
 		return nil, ErrImproperPath
 	}
-	dir := lang.If(filetype == "d", true).Else(false)
+	dir := IfElse(filetype == "d", true, false)
 	return &Path{
 		mode: mode,
 		path: path,
@@ -174,4 +172,11 @@ func IsProperPath(fp string) bool {
 		return false
 	}
 	return true
+}
+
+func IfElse[T any](condition bool, result T, otherwise T) T {
+	if condition {
+		return result
+	}
+	return otherwise
 }
