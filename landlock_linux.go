@@ -87,6 +87,5 @@ func (l *locker) lockOne(p *Path, fd int) error {
 		return err
 	}
 	ba.parentFd = fd2
-	add(fd, &ba, 0)
-	return nil
+	return add(fd, &ba, 0)
 }
