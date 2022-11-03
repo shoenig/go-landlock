@@ -117,6 +117,5 @@ func TestLocker_reads(t *testing.T) {
 		t.Logf("TEST[%d] (arg: %s)\n\t|> %s\n\n", i, arg, string(b))
 		must.NoError(t, err)
 		continue
-
 	}
 }

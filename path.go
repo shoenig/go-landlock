@@ -84,11 +84,11 @@ func Dir(path, mode string) *Path {
 }
 
 func newPath(path, mode string, dir bool) *Path {
-	if !IsProperMode(mode) {
-		panic("improper mode")
-	}
 	if !IsProperPath(path) {
 		panic("improper path")
+	}
+	if !IsProperMode(mode) {
+		panic("improper mode")
 	}
 	return &Path{
 		mode: mode,
@@ -167,11 +167,8 @@ func IsProperMode(mode string) bool {
 }
 
 // IsProperPath returns whether fp conforms to a valid filepath.
-func IsProperPath(fp string) bool {
-	if fp == "" {
-		return false
-	}
-	return true
+func IsProperPath(path string) bool {
+	return path != ""
 }
 
 func IfElse[T any](condition bool, result T, otherwise T) T {
