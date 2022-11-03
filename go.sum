@@ -1,0 +1,12 @@
+github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/hashicorp/go-set v0.1.6 h1:fj/JG5B97sAOd9OQN4GL880yCE384fz3asNDpGbxkPo=
+github.com/hashicorp/go-set v0.1.6/go.mod h1:ELvMcE+1mRHYPVgTFSQiecObIwZRxY5Q11EhbtmM5KQ=
+github.com/shoenig/lang v0.0.0 h1:qtWp/ErkJ4WJAc8e6WQktvEbQrWI8stdU0VVPGnGIPc=
+github.com/shoenig/lang v0.0.0/go.mod h1:KJnS0nn0nwewNhEBGWstF8Ym0/uoAR6Tb3TyusZ3Kms=
+github.com/shoenig/test v0.4.3 h1:3+CjrpqCwtL08S0wZQilu9WWR/S2CdsLKhHjbJqPj/I=
+github.com/shoenig/test v0.4.3/go.mod h1:xYtyGBC5Q3kzCNyJg/SjgNpfAa2kvmgA0i5+lQso8x0=
+golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
+golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.66 h1:ikIhPzfkSSAEwBOU+2DWhoF+xnGUhvlMTfQjBVhvzQY=
+kernel.org/pub/linux/libs/security/libcap/psx v1.2.66/go.mod h1:+l6Ee2F59XiJ2I6WR5ObpC1utCQJZ/VLsEbQCD8RG24=
