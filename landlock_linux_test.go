@@ -53,18 +53,95 @@ func TestLocker_reads(t *testing.T) {
 			name:    "none",
 			paths:   nil,
 			success: nil,
-			failure: []string{"tests/Labels.txt", "tests/fruits", "tests/fruits/apple.txt"},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/fruits",
+				"tests/fruits/apple.txt",
+			},
+		},
+		{
+			name:  "write only file",
+			paths: []string{"f:w:tests/Labels.txt"},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/fruits/apple.txt",
+			},
+		},
+		{
+			name:  "write only dir",
+			paths: []string{"d:w:tests/"},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/fruits/apple.txt",
+			},
 		},
 		{
 			name:    "read top file",
 			paths:   []string{"f:r:tests/Labels.txt"},
 			success: []string{"tests/Labels.txt"},
-			failure: []string{"tests/fruits/apple.txt"},
+			failure: []string{
+				"tests/fruits/apple.txt",
+				"tests/fruits/banana.txt",
+				"tests/veggies/celary.txt",
+				"tests/veggies/corn.txt",
+				"tests/veggies/unsure/beans.txt",
+			},
 		},
 		{
-			name:    "read sub file",
-			paths:   []string{"d:r:tests"},
-			success: []string{"tests/fruits/apple.txt"},
+			name:  "read top dir",
+			paths: []string{"d:r:tests"},
+			success: []string{
+				"tests/Labels.txt",
+				"tests/fruits/apple.txt",
+				"tests/fruits/banana.txt",
+				"tests/veggies/celary.txt",
+				"tests/veggies/corn.txt",
+				"tests/veggies/unsure/beans.txt",
+			},
+		},
+		{
+			name:  "read fruits dir",
+			paths: []string{"d:r:tests/fruits"},
+			success: []string{
+				"tests/fruits/apple.txt",
+				"tests/fruits/banana.txt",
+			},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/veggies/celary.txt",
+				"tests/veggies/corn.txt",
+				"tests/veggies/unsure/beans.txt",
+			},
+		},
+		{
+			name:  "read beans file",
+			paths: []string{"f:r:tests/veggies/unsure/beans.txt"},
+			success: []string{
+				"tests/veggies/unsure/beans.txt",
+			},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/fruits/apple.txt",
+				"tests/fruits/banana.txt",
+				"tests/veggies/corn.txt",
+				"tests/veggies/celary.txt",
+			},
+		},
+		{
+			name: "mixed file",
+			paths: []string{
+				// "f:rw:tests/veggies/corn.txt", // should this work?
+				"f:rw:tests/fruits/apple.txt",
+			},
+			success: []string{
+				"tests/fruits/apple.txt",
+			},
+			failure: []string{
+				"tests/Labels.txt",
+				"tests/veggies/corn.txt",
+				"tests/fruits/banana.txt",
+				"tests/veggies/celary.txt",
+			},
 		},
 		{
 			name:    "etc directory",
@@ -84,7 +161,7 @@ func TestLocker_reads(t *testing.T) {
 			paths = append(paths, p)
 		}
 		err := New(paths...).Lock(Enforce)
-		must.NoError(t, err)
+		must.NoError(t, err, must.Sprint("paths", paths))
 
 		for _, p := range tc.failure {
 			_, err := os.ReadFile(p)
