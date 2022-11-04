@@ -4,8 +4,10 @@ package landlock
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -193,6 +195,95 @@ func TestLocker_reads(t *testing.T) {
 		b, err := cmd.CombinedOutput()
 		t.Logf("TEST[%d] (arg: %s)\n\t|> %s\n\n", i, arg, string(b))
 		must.NoError(t, err)
-		continue
+	}
+}
+
+func tmpFile(t *testing.T, name, content string) string {
+	dir := os.TempDir() // cannot use t.TempDir
+	f := filepath.Join(dir, name)
+	err := os.WriteFile(f, []byte(content), 0o644)
+	must.NoError(t, err)
+	return f
+}
+
+func TestLocker_writes(t *testing.T) {
+	cases := map[string]func(){
+		"none": func() {
+			l := New() // none
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			err = os.WriteFile("/tmp/a.txt", []byte{'a'}, 0o640)
+			must.Error(t, err)
+		},
+		"one": func() {
+			f := tmpFile(t, "hello.txt", "hi")
+			l := New(File(f, "w"))
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
+			must.NoError(t, err)
+			_, err = io.WriteString(w, "test")
+			must.NoError(t, err)
+			err = w.Close()
+			must.NoError(t, err)
+			_, err = os.ReadFile(f)
+			must.Error(t, err) // no permission
+		},
+		"one_rw": func() {
+			f := tmpFile(t, "hello.txt", "hi")
+			l := New(File(f, "rw"))
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
+			must.NoError(t, err)
+			_, err = io.WriteString(w, "test")
+			must.NoError(t, err)
+			err = w.Close()
+			must.NoError(t, err)
+			_, err = os.ReadFile(f)
+			must.NoError(t, err) // has permission
+		},
+		"dir_ro": func() {
+			f := tmpFile(t, "hello.txt", "hi")
+			l := New(Dir(filepath.Dir(f), "r"))
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			_, err = os.OpenFile(f, os.O_WRONLY, 0o644)
+			must.Error(t, err)
+		},
+		"dir_rw": func() {
+			f := tmpFile(t, "hello.txt", "hi")
+			l := New(Dir(filepath.Dir(f), "rw"))
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
+			must.NoError(t, err)
+			_, err = io.WriteString(w, "test")
+			must.NoError(t, err)
+			err = w.Close()
+			must.NoError(t, err)
+			_, err = os.ReadFile(f)
+			must.NoError(t, err) // has permission
+		},
+	}
+
+	// This part gets run in each sub-process; it is the actual test
+	// case, and must return non-zero on test failure.
+	if name := os.Getenv("TEST"); name != "" {
+		f := cases[name]
+		f()
+		return
+	}
+
+	// This part is the normal test runner. It launches a sub-process
+	// for each test case so we can observe landlock behavior more than
+	// just once.
+	for name := range cases {
+		arg := fmt.Sprintf("-test.run=TestLocker_writes/%s", name)
+		cmd := exec.Command(os.Args[0], arg)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
+		b, err := cmd.CombinedOutput()
+		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
+		must.NoError(t, err)
 	}
 }
