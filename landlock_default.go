@@ -9,6 +9,9 @@ import (
 var (
 	// ErrNotSupported indicates Landlock is not supported on this platform
 	ErrNotSupported = errors.New("landlock not supported on this platform")
+
+	// ErrBug indicates an unexpected error occured
+	ErrBug = errors.New("landlock experienced an unexpected bug")
 )
 
 type locker struct {
@@ -23,9 +26,10 @@ func (l *locker) Lock(s Safety) error {
 	switch s {
 	case Ignore:
 		return nil
-	default:
+	case Enforce:
 		return ErrNotSupported
 	}
+	return ErrBug
 }
 
 func (l *locker) String() string {
