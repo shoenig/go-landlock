@@ -75,7 +75,7 @@ func (l *locker) lock() error {
 	c := capabilities()
 	ra := rulesetAttr{handleAccessFS: uint64(c)}
 
-	fd, err := ruleset(&ra, 0)
+	fd, err := ruleset(&ra)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (l *locker) lock() error {
 		return err
 	}
 
-	if err = restrict(fd, 0); err != nil {
+	if err = restrict(fd); err != nil {
 		return err
 	}
 
@@ -107,5 +107,5 @@ func (l *locker) lockOne(p *Path, fd int) error {
 		return err
 	}
 	ba.parentFd = fd2
-	return add(fd, &ba, 0)
+	return add(fd, &ba)
 }
