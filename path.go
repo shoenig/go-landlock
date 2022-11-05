@@ -43,6 +43,28 @@ func (p *Path) access() rule {
 	return allow
 }
 
+var shared []*Path
+
+// todo: stat & load
+func init() {
+	shared = []*Path{
+		// devices
+		File("/dev/null", "rw"),
+
+		// libs
+		Dir("/lib", "rx"),
+		Dir("/lib64", "rx"),
+		Dir("/usr/lib", "rx"),
+		Dir("/usr/local/lib", "rx"),
+		// Dir("/usr/local/lib64", "rx"),
+
+		// linker
+		File("/etc/ld.so.conf", "r"),
+		File("/etc/ld.so.cache", "r"),
+		Dir("/etc/ld.so.conf.d", "r"),
+	}
+}
+
 // Equal returns true if p is equal to o in terms
 // of mode and filepath.
 func (p *Path) Equal(o *Path) bool {
@@ -81,6 +103,14 @@ func File(path, mode string) *Path {
 // Dir creates a  Path given path and mode, associated with a directory.
 func Dir(path, mode string) *Path {
 	return newPath(path, mode, true)
+}
+
+// Shared creates a Path representing the common files and directories
+// needed for dynamic shared object files.
+//
+// Use Shared when allowing the execution of dynamically linked binaries.
+func Shared() *Path {
+	return &Path{path: "", mode: "s"}
 }
 
 func newPath(path, mode string, dir bool) *Path {

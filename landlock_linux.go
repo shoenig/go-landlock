@@ -27,10 +27,18 @@ type locker struct {
 	paths *set.HashSet[*Path, string]
 }
 
+// New creates a Locker that allows the given paths and permissions.
 func New(paths ...*Path) Locker {
-	return &locker{
-		paths: set.HashSetFrom[*Path, string](paths),
+	s := set.NewHashSet[*Path, string](10)
+	for _, path := range paths {
+		switch path.mode {
+		case "s":
+			s.InsertAll(shared)
+		default:
+			s.Insert(path)
+		}
 	}
+	return &locker{paths: s}
 }
 
 func (l *locker) Lock(s Safety) error {
