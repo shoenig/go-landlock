@@ -32,8 +32,18 @@ func New(paths ...*Path) Locker {
 	s := set.NewHashSet[*Path, string](10)
 	for _, path := range paths {
 		switch path.mode {
-		case "s":
+		case modeShared:
 			s.InsertAll(shared)
+		case modeStdio:
+			s.InsertAll(stdio)
+		case modeTTY:
+			s.InsertAll(tty)
+		case modeTmp:
+			s.InsertAll(tmp)
+		case modeVMInfo:
+			s.InsertAll(vminfo)
+		case modeDNS:
+			s.InsertAll(dns)
 		default:
 			s.Insert(path)
 		}
