@@ -12,3 +12,9 @@ func Test_Available(t *testing.T) {
 	a := Available()
 	must.False(t, a)
 }
+
+func Test_Detect(t *testing.T) {
+	v, err := Detect()
+	must.Error(t, err)
+	must.Zero(t, v)
+}
