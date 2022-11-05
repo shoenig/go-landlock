@@ -91,26 +91,26 @@ This is a complete example of a small program which is able to read from
 package main
 
 import (
-	"fmt"
-	"os"
+  "fmt"
+  "os"
 
-	"github.com/shoenig/go-landlock"
+  "github.com/shoenig/go-landlock"
 )
 
 func main() {
-	l := landlock.New(
-	  landlock.File("/etc/os-release", "r"),
-	)
-	err := l.Lock(landlock.Enforce)
-	if err != nil {
-	  panic(err)
-	}
+  l := landlock.New(
+    landlock.File("/etc/os-release", "r"),
+  )
+  err := l.Lock(landlock.Enforce)
+  if err != nil {
+    panic(err)
+  }
 
-	_, err = os.ReadFile("/etc/os-release")
-	fmt.Println("reading /etc/os-release", err)
+  _, err = os.ReadFile("/etc/os-release")
+  fmt.Println("reading /etc/os-release", err)
 
-	_, err = os.ReadFile("/etc/passwd")
-	fmt.Println("reading /etc/passwd", err)
+  _, err = os.ReadFile("/etc/passwd")
+  fmt.Println("reading /etc/passwd", err)
 }
 ```
 
@@ -129,7 +129,7 @@ to simplify this configuration.
 ```go
 l := landlock.New(
   landlock.Shared(), // common shared object files
-	landlock.File("/usr/bin/echo", "rx"),
+  landlock.File("/usr/bin/echo", "rx"),
 )
 
 // e.g. execute echo in a sub-process
