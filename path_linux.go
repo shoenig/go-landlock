@@ -2,6 +2,10 @@
 
 package landlock
 
+import (
+	"os"
+)
+
 func (p *Path) access() rule {
 	allow := rule(0)
 	for _, c := range p.mode {
