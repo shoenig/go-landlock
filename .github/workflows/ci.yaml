@@ -4,7 +4,11 @@ env:
   GO_VERSION: ~1.19
 jobs:
   run-tests:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04, macos-12, windows-2022]
+    runs-on: ${{matrix.os}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
