@@ -11,18 +11,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Safety indicates the enforcement behavior on systems where landlock
-// does not exist or operate as expected.
-//
-// Enforce - return an error on failure
-// Ignore - continue with no error on failure
-type Safety byte
-
-const (
-	Enforce Safety = iota
-	Ignore
-)
-
 type locker struct {
 	paths *set.HashSet[*Path, string]
 }
