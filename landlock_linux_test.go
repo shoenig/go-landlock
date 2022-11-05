@@ -368,3 +368,73 @@ func TestLocker_creates(t *testing.T) {
 		must.NoError(t, err)
 	}
 }
+
+func TestLocker_executes(t *testing.T) {
+	cases := map[string]func(){
+		"none": func() {
+			l := New()
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			cmd := exec.Command("tests/fruits/hello.sh")
+			_, err = cmd.CombinedOutput()
+			must.Error(t, err) // no permission
+			fmt.Println("err", err)
+		},
+		"bash_x": func() {
+			l := New(
+				Shared(),
+				File("/usr/bin/bash", "rx"),
+				File("/usr/bin/echo", "rx"),
+			)
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			cmd := exec.Command("/usr/bin/bash", "-c", "/usr/bin/echo -n hi")
+			b, err := cmd.CombinedOutput()
+			must.NoError(t, err)
+			must.Eq(t, "hi", string(b))
+		},
+		"deny_script": func() {
+			l := New(
+				Shared(),
+				File("tests/fruits/hello.sh", "rw"),
+				File("/usr/bin/bash", "rx"),
+				File("/usr/bin/echo", "rx"),
+			)
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			cmd := exec.Command("tests/fruits/hello.sh")
+			_, err = cmd.CombinedOutput()
+			must.Error(t, err)
+		},
+		"allow_script": func() {
+			l := New(
+				Shared(),
+				Dir("/", "rx"),
+				File("tests/fruits/hello.sh", "rx"),
+				File("/usr/bin/bash", "rx"),
+				File("/usr/bin/echo", "rx"),
+			)
+			err := l.Lock(Enforce)
+			must.NoError(t, err)
+			cmd := exec.Command("tests/fruits/hello.sh")
+			b, err := cmd.CombinedOutput()
+			must.NoError(t, err)
+			must.Eq(t, "so you like fruit?", string(b))
+		},
+	}
+
+	if name := os.Getenv("TEST"); name != "" {
+		f := cases[name]
+		f()
+		return
+	}
+
+	for name := range cases {
+		arg := fmt.Sprintf("-test.run=TestLocker_executes/%s", name)
+		cmd := exec.Command(os.Args[0], arg)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
+		b, err := cmd.CombinedOutput()
+		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
+		must.NoError(t, err)
+	}
+}
