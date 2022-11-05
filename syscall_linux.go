@@ -80,13 +80,13 @@ type rulesetAttr struct {
 	handleAccessFS uint64
 }
 
-func ruleset(ra *rulesetAttr, flags int) (int, error) {
+func ruleset(ra *rulesetAttr) (int, error) {
 	const size = 8
 	r0, _, e1 := syscall.Syscall(
 		unix.SYS_LANDLOCK_CREATE_RULESET,
 		uintptr(unsafe.Pointer(ra)),
 		uintptr(size),
-		uintptr(flags),
+		0,
 	)
 	return int(r0), errno(e1)
 }
@@ -96,14 +96,13 @@ type beneathAttr struct {
 	parentFd      int
 }
 
-func add(fd int, ba *beneathAttr, flags int) error {
+func add(fd int, ba *beneathAttr) error {
 	_, _, e1 := syscall.Syscall6(
 		unix.SYS_LANDLOCK_ADD_RULE,
 		uintptr(fd),
 		uintptr(unix.LANDLOCK_RULE_PATH_BENEATH),
 		uintptr(unsafe.Pointer(ba)),
-		uintptr(flags),
-		0, 0,
+		0, 0, 0,
 	)
 	return errno(e1)
 }
@@ -123,12 +122,11 @@ func prctl() error {
 // https://git.kernel.org/pub/scm/libs/libcap/libcap.git/tree/psx/psx.go
 //
 // apply SYS_LANDLOCK_RESTRICT_SELF to all OS threads concurrently (with or without CGO)
-func restrict(fd int, flags int) error {
+func restrict(fd int) error {
 	_, _, e1 := psx.Syscall3(
 		unix.SYS_LANDLOCK_RESTRICT_SELF,
 		uintptr(fd),
-		uintptr(flags),
-		0,
+		0, 0,
 	)
 	return errno(e1)
 }
