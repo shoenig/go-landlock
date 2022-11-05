@@ -56,6 +56,8 @@ var vminfo []*Path
 
 var dns []*Path
 
+var certs []*Path
+
 func init() {
 	shared = load([]*Path{
 		File("/dev/null", "rw"),
@@ -114,6 +116,10 @@ func init() {
 		File("/etc/services", "r"),
 		File("/etc/protocols", "r"),
 		File("/etc/resolv.conf", "r"),
+	})
+
+	certs = load([]*Path{
+		File("/etc/ssl/certs/ca-certificates.crt", "r"),
 	})
 }
 
@@ -205,6 +211,12 @@ func DNS() *Path {
 	return &Path{mode: modeDNS}
 }
 
+// Certs creates a Path representing the common files needed for SSL/TLS
+// certificate validation.
+func Certs() *Path {
+	return &Path{mode: modeCerts}
+}
+
 const (
 	modeShared = "1"
 	modeStdio  = "2"
@@ -212,6 +224,7 @@ const (
 	modeTmp    = "4"
 	modeVMInfo = "5"
 	modeDNS    = "6"
+	modeCerts  = "7"
 )
 
 func newPath(path, mode string, dir bool) *Path {
