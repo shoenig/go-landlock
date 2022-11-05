@@ -44,6 +44,8 @@ func New(paths ...*Path) Locker {
 			s.InsertAll(vminfo)
 		case modeDNS:
 			s.InsertAll(dns)
+		case modeCerts:
+			s.InsertAll(certs)
 		default:
 			s.Insert(path)
 		}
