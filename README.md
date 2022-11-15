@@ -71,10 +71,10 @@ of file mode permissions to allow. Must be a subset of `"rwxc"`.
 - `c` : enable create permissions
 
 Once a `Locker` is configured, isolation starts on the call to `Lock()`. The level
-of safety is configured by passing either `Enforce` or `Ignore`.
+of safety is configured by passing either `Mandatory` or `Try`.
 
-- `Enforce` : return an error is Landlock is unsupported or activation causes an error
-- `Ignore` : continue without error regardless if landlock is supported or working
+- `Mandatory` : return an error is Landlock is unsupported or activation causes an error
+- `Try` : continue without error regardless if landlock is supported or working
 
 Once a process has been locked, it cannot be unlocked. Any descendent processes of the
 locked process will also be locked, and cannot be unlocked. A child process can further
@@ -101,7 +101,7 @@ func main() {
   l := landlock.New(
     landlock.File("/etc/os-release", "r"),
   )
-  err := l.Lock(landlock.Enforce)
+  err := l.Lock(landlock.Mandatory)
   if err != nil {
     panic(err)
   }

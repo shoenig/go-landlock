@@ -12,14 +12,14 @@ import (
 
 // Safety indicates the enforcement behavior on systems where landlock
 // does not exist or operate as expected.
-//
-// Enforce - return an error on failure
-// Ignore - continue with no error on failure
 type Safety byte
 
 const (
-	Enforce Safety = iota
-	Ignore
+	// Mandatory mode will return an error on failure.
+	Mandatory Safety = iota
+
+	// Try mode will continue with no error on failure.
+	Try
 )
 
 // A Locker is an interface over the Kernel landlock LSM feature.
