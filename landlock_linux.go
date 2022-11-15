@@ -42,11 +42,11 @@ func New(paths ...*Path) Locker {
 }
 
 func (l *locker) Lock(s Safety) error {
-	if !available && s != Ignore {
+	if !available && s != Try {
 		return errors.New("landlock not available")
 	}
 
-	if err := l.lock(); err != nil && s != Ignore {
+	if err := l.lock(); err != nil && s != Try {
 		return fmt.Errorf("landlock failed to lock: %w", err)
 	}
 

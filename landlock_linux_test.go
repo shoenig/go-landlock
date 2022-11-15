@@ -168,7 +168,7 @@ func TestLocker_reads(t *testing.T) {
 			must.NoError(t, err)
 			paths = append(paths, p)
 		}
-		err := New(paths...).Lock(Enforce)
+		err := New(paths...).Lock(Mandatory)
 		must.NoError(t, err, must.Sprint("paths", paths))
 
 		for _, p := range tc.failure {
@@ -216,7 +216,7 @@ func TestLocker_writes(t *testing.T) {
 	cases := map[string]func(){
 		"none": func() {
 			l := New() // none
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			err = os.WriteFile("/tmp/a.txt", []byte{'a'}, 0o640)
 			must.Error(t, err)
@@ -224,7 +224,7 @@ func TestLocker_writes(t *testing.T) {
 		"one": func() {
 			f := tmpFile(t, "hello.txt", "hi")
 			l := New(File(f, "w"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
 			must.NoError(t, err)
@@ -238,7 +238,7 @@ func TestLocker_writes(t *testing.T) {
 		"one_rw": func() {
 			f := tmpFile(t, "hello.txt", "hi")
 			l := New(File(f, "rw"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
 			must.NoError(t, err)
@@ -252,7 +252,7 @@ func TestLocker_writes(t *testing.T) {
 		"dir_ro": func() {
 			f := tmpFile(t, "hello.txt", "hi")
 			l := New(Dir(filepath.Dir(f), "r"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			_, err = os.OpenFile(f, os.O_WRONLY, 0o644)
 			must.Error(t, err)
@@ -260,7 +260,7 @@ func TestLocker_writes(t *testing.T) {
 		"dir_rw": func() {
 			f := tmpFile(t, "hello.txt", "hi")
 			l := New(Dir(filepath.Dir(f), "rw"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
 			must.NoError(t, err)
@@ -274,7 +274,7 @@ func TestLocker_writes(t *testing.T) {
 		"dir_w": func() {
 			f := tmpFile(t, "hello.txt", "hi")
 			l := New(Dir(filepath.Dir(f), "w"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			w, err := os.OpenFile(f, os.O_WRONLY, 0o644)
 			must.NoError(t, err)
@@ -322,7 +322,7 @@ func TestLocker_creates(t *testing.T) {
 	cases := map[string]func(){
 		"none": func() {
 			l := New() // none
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			_, err = os.OpenFile("/tmp/a.txt", os.O_CREATE, 0o0644)
 			must.Error(t, err)
@@ -331,7 +331,7 @@ func TestLocker_creates(t *testing.T) {
 			f := filepath.Join(os.TempDir(), random())
 			dir := filepath.Dir(f)
 			l := New(Dir(dir, "rw"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			_, err = os.OpenFile(f, os.O_CREATE, 0o644)
 			must.Error(t, err) // rw only, not create
@@ -340,7 +340,7 @@ func TestLocker_creates(t *testing.T) {
 			f := filepath.Join(os.TempDir(), random())
 			dir := filepath.Dir(f)
 			l := New(Dir(dir, "rwc"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			_, err = os.OpenFile(f, os.O_CREATE, 0o644)
 			must.NoError(t, err)
@@ -348,7 +348,7 @@ func TestLocker_creates(t *testing.T) {
 		"file_rwc": func() {
 			f := filepath.Join(os.TempDir(), random())
 			l := New(File(f, "rwc"))
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.Error(t, err) // no such file
 		},
 	}
@@ -373,7 +373,7 @@ func TestLocker_executes(t *testing.T) {
 	cases := map[string]func(){
 		"none": func() {
 			l := New()
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			cmd := exec.Command("tests/fruits/hello.sh")
 			_, err = cmd.CombinedOutput()
@@ -386,7 +386,7 @@ func TestLocker_executes(t *testing.T) {
 				File("/usr/bin/bash", "rx"),
 				File("/usr/bin/echo", "rx"),
 			)
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			cmd := exec.Command("/usr/bin/bash", "-c", "/usr/bin/echo -n hi")
 			b, err := cmd.CombinedOutput()
@@ -400,7 +400,7 @@ func TestLocker_executes(t *testing.T) {
 				File("/usr/bin/bash", "rx"),
 				File("/usr/bin/echo", "rx"),
 			)
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			cmd := exec.Command("tests/fruits/hello.sh")
 			_, err = cmd.CombinedOutput()
@@ -414,7 +414,7 @@ func TestLocker_executes(t *testing.T) {
 				File("/usr/bin/bash", "rx"),
 				File("/usr/bin/echo", "rx"),
 			)
-			err := l.Lock(Enforce)
+			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 			cmd := exec.Command("tests/fruits/hello.sh")
 			b, err := cmd.CombinedOutput()

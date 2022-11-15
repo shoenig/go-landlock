@@ -24,9 +24,9 @@ func New(...*Path) Locker {
 
 func (l *locker) Lock(s Safety) error {
 	switch s {
-	case Ignore:
+	case Try:
 		return nil
-	case Enforce:
+	case Mandatory:
 		return ErrNotSupported
 	}
 	return ErrBug

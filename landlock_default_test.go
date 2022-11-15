@@ -10,15 +10,15 @@ import (
 
 var _ Locker = (*locker)(nil)
 
-func TestLocker_Lock_Enforce(t *testing.T) {
+func TestLocker_Lock_Mandatory(t *testing.T) {
 	l := New()
-	err := l.Lock(Enforce)
+	err := l.Lock(Mandatory)
 	must.Error(t, err)
 }
 
-func TestLocker_Lock_Ignore(t *testing.T) {
+func TestLocker_Lock_Try(t *testing.T) {
 	l := New()
-	err := l.Lock(Ignore)
+	err := l.Lock(Try)
 	must.NoError(t, err)
 }
 
