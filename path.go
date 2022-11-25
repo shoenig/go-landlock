@@ -54,6 +54,8 @@ func (p *Path) String() string {
 // File creates a Path given the path and mode, associated with a file.
 //
 // File should be used with regular files, FIFOs, sockets, symlinks.
+//
+// A File cannot be used to create or delete files.
 func File(path, mode string) *Path {
 	return newPath(path, mode, false)
 }

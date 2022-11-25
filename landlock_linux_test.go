@@ -5,6 +5,7 @@ package landlock
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -431,6 +432,56 @@ func TestLocker_executes(t *testing.T) {
 
 	for name := range cases {
 		arg := fmt.Sprintf("-test.run=TestLocker_executes/%s", name)
+		cmd := exec.Command(os.Args[0], arg)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
+		b, err := cmd.CombinedOutput()
+		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
+		must.NoError(t, err)
+	}
+}
+
+func writef(t *testing.T, path, content string, mode fs.FileMode) {
+	err := os.WriteFile(path, []byte(content), mode)
+	must.NoError(t, err)
+}
+
+func TestLocker_deletes(t *testing.T) {
+	cases := map[string]func(){
+		"none": func() {
+			l := New() // none
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Remove("tests/fruits/hello.sh")
+			must.Error(t, err)
+		},
+		"rm_file": func() {
+			f1 := filepath.Join(os.TempDir(), random())
+			f2 := filepath.Join(os.TempDir(), random())
+			writef(t, f1, "one", 0o644)
+			writef(t, f2, "two", 0o644)
+			l := New(File(f1, "rwc"), File(f2, "r"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Remove(f1)
+			must.Error(t, err)
+			err = os.Remove(f2)
+			must.Error(t, err)
+		},
+	}
+
+	// This part gets run in each sub-process; it is the actual test
+	// case, and must return non-zero on test failure.
+	if name := os.Getenv("TEST"); name != "" {
+		f := cases[name]
+		f()
+		return
+	}
+
+	// This part is the normal test runner. It launches a sub-process
+	// for each test case so we can observe landlock behavior more than
+	// just once.
+	for name := range cases {
+		arg := fmt.Sprintf("-test.run=TestLocker_deletes/%s", name)
 		cmd := exec.Command(os.Args[0], arg)
 		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
 		b, err := cmd.CombinedOutput()

@@ -12,15 +12,15 @@ func (p *Path) access() rule {
 		switch c {
 		case 'r':
 			directory := fsReadFile | fsReadDir
-			allow |= IfElse(!p.dir, fsReadFile, directory)
+			allow |= IfElse(p.dir, directory, fsReadFile)
 		case 'w':
 			allow |= fsWriteFile
 		case 'x':
 			allow |= fsExecute
 		case 'c':
-			regular := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock | fsMakeSymlink
-			allow |= IfElse(!p.dir, regular, regular|fsMakeDir)
-			allow |= IfElse(version > 1, fsRefer, 0)
+			directory := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock | fsMakeSymlink | fsMakeDir
+			allow |= IfElse(p.dir, directory, 0)
+			allow |= IfElse(p.dir && version > 1, fsRefer, 0)
 		}
 	}
 	return allow
