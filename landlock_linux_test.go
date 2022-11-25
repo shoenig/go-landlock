@@ -467,6 +467,35 @@ func TestLocker_deletes(t *testing.T) {
 			err = os.Remove(f2)
 			must.Error(t, err)
 		},
+		"rm_dir_rm_file": func() {
+			f := filepath.Join(os.TempDir(), random())
+			writef(t, f, "one", 0o644)
+			l := New(Dir(filepath.Dir(f), "rwc"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Remove(f)
+			must.NoError(t, err)
+		},
+		"rm_dir_rwc": func() {
+			d := os.TempDir()
+			err := os.MkdirAll(filepath.Join(d, "/a/b/c"), 0o755)
+			must.NoError(t, err)
+			l := New(Dir(d, "rwc"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.RemoveAll(filepath.Join(d, "a/b"))
+			must.NoError(t, err)
+		},
+		"rm_dir_rw": func() {
+			d := os.TempDir()
+			err := os.MkdirAll(filepath.Join(d, "/a/b/c"), 0o755)
+			must.NoError(t, err)
+			l := New(Dir(d, "rw"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.RemoveAll(filepath.Join(d, "a/b"))
+			must.Error(t, err)
+		},
 	}
 
 	// This part gets run in each sub-process; it is the actual test

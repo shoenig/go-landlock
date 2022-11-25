@@ -18,7 +18,8 @@ func (p *Path) access() rule {
 		case 'x':
 			allow |= fsExecute
 		case 'c':
-			directory := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock | fsMakeSymlink | fsMakeDir
+			directory := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock |
+				fsMakeSymlink | fsMakeDir | fsRemoveFile | fsRemoveDir
 			allow |= IfElse(p.dir, directory, 0)
 			allow |= IfElse(p.dir && version > 1, fsRefer, 0)
 		}
