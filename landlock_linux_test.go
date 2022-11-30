@@ -518,3 +518,58 @@ func TestLocker_deletes(t *testing.T) {
 		must.NoError(t, err)
 	}
 }
+
+func TestLocker_symlink(t *testing.T) {
+	cases := map[string]func(){
+		"read_escape": func() {
+			d := os.TempDir()
+			source := filepath.Join(d, random())
+			destination := "/etc/passwd"
+			err := os.Symlink(destination, source)
+			must.NoError(t, err)
+
+			l := New(Dir(d, "r"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+
+			_, err = os.ReadFile(source)
+			must.Error(t, err)
+		},
+		"create_escape": func() {
+			d := os.TempDir()
+			source := filepath.Join(d, random())
+			destination := "/etc/passwd"
+
+			l := New(Dir(d, "rwc"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+
+			err = os.Symlink(destination, source)
+			must.NoError(t, err) // creating symlink is allowable;
+			// FS_REFER is about hardlinks and mounts
+
+			_, err = os.ReadFile(source)
+			must.Error(t, err) // cannot read the symlink
+		},
+	}
+
+	// This part gets run in each sub-process; it is the actual test
+	// case, and must return non-zero on test failure.
+	if name := os.Getenv("TEST"); name != "" {
+		f := cases[name]
+		f()
+		return
+	}
+
+	// This part is the normal test runner. It launches a sub-process
+	// for each test case so we can observe landlock behavior more than
+	// just once.
+	for name := range cases {
+		arg := fmt.Sprintf("-test.run=TestLocker_symlink/%s", name)
+		cmd := exec.Command(os.Args[0], arg)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
+		b, err := cmd.CombinedOutput()
+		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
+		must.NoError(t, err)
+	}
+}
