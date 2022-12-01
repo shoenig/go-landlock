@@ -101,8 +101,15 @@ func init() {
 		File("/etc/resolv.conf", "r"),
 	})
 
+	// https://cs.opensource.google/go/go/+/refs/tags/go1.19.3:src/crypto/x509/root_linux.go
 	certs = load([]*Path{
-		File("/etc/ssl/certs/ca-certificates.crt", "r"),
+		Dir("/etc/ssl/certs", "r"),                                     // SLES, Debian
+		Dir("/etc/pki/tls/certs", "r"),                                 // Fedora / RHEL
+		Dir("/sys/etc/security/cacerts", "r"),                          // Android
+		File("/etc/ssl/ca-bundle.pem", "r"),                            // OpenSUSE
+		File("/etc/pki/tls/cacert.pem", "r"),                           // OpenELEC
+		File("/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem", "r"), // RHEL 7
+		File("/etc/ssl/cert.pem", "r"),                                 // Alpine
 	})
 }
 
