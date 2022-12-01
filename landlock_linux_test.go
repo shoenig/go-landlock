@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"testing"
 	"time"
 
@@ -52,117 +51,13 @@ func TestLocker_String(t *testing.T) {
 }
 
 func TestLocker_reads(t *testing.T) {
-	cases := []struct {
-		name    string
+	type testCase struct {
 		paths   []string
 		success []string
 		failure []string
-	}{
-		{
-			name:    "none",
-			paths:   nil,
-			success: nil,
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/fruits",
-				"tests/fruits/apple.txt",
-			},
-		},
-		{
-			name:  "write only file",
-			paths: []string{"f:w:tests/Labels.txt"},
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/fruits/apple.txt",
-			},
-		},
-		{
-			name:  "write only dir",
-			paths: []string{"d:w:tests/"},
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/fruits/apple.txt",
-			},
-		},
-		{
-			name:    "read top file",
-			paths:   []string{"f:r:tests/Labels.txt"},
-			success: []string{"tests/Labels.txt"},
-			failure: []string{
-				"tests/fruits/apple.txt",
-				"tests/fruits/banana.txt",
-				"tests/veggies/celary.txt",
-				"tests/veggies/corn.txt",
-				"tests/veggies/unsure/beans.txt",
-			},
-		},
-		{
-			name:  "read top dir",
-			paths: []string{"d:r:tests"},
-			success: []string{
-				"tests/Labels.txt",
-				"tests/fruits/apple.txt",
-				"tests/fruits/banana.txt",
-				"tests/veggies/celary.txt",
-				"tests/veggies/corn.txt",
-				"tests/veggies/unsure/beans.txt",
-			},
-		},
-		{
-			name:  "read fruits dir",
-			paths: []string{"d:r:tests/fruits"},
-			success: []string{
-				"tests/fruits/apple.txt",
-				"tests/fruits/banana.txt",
-			},
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/veggies/celary.txt",
-				"tests/veggies/corn.txt",
-				"tests/veggies/unsure/beans.txt",
-			},
-		},
-		{
-			name:  "read beans file",
-			paths: []string{"f:r:tests/veggies/unsure/beans.txt"},
-			success: []string{
-				"tests/veggies/unsure/beans.txt",
-			},
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/fruits/apple.txt",
-				"tests/fruits/banana.txt",
-				"tests/veggies/corn.txt",
-				"tests/veggies/celary.txt",
-			},
-		},
-		{
-			name: "mixed file",
-			paths: []string{
-				// "f:rw:tests/veggies/corn.txt", // should this work?
-				"f:rw:tests/fruits/apple.txt",
-			},
-			success: []string{
-				"tests/fruits/apple.txt",
-			},
-			failure: []string{
-				"tests/Labels.txt",
-				"tests/veggies/corn.txt",
-				"tests/fruits/banana.txt",
-				"tests/veggies/celary.txt",
-			},
-		},
-		{
-			name:    "etc directory",
-			paths:   []string{"d:r:/etc"},
-			success: []string{"/etc/passwd"},
-			failure: []string{"/bin/sh"},
-		},
 	}
 
-	try := func(num int) {
-		tc := cases[num]
-		fmt.Println("running test case:", num, tc.name)
+	try := func(tc testCase) {
 		var paths []*Path
 		for _, path := range tc.paths {
 			p, err := ParsePath(path)
@@ -173,44 +68,136 @@ func TestLocker_reads(t *testing.T) {
 		must.NoError(t, err, must.Sprint("paths", paths))
 
 		for _, p := range tc.failure {
-			_, err := os.ReadFile(p)
+			_, err = os.ReadFile(p)
 			must.Error(t, err)
 			must.StrHasSuffix(t, "permission denied", err.Error())
 		}
 		for _, p := range tc.success {
-			_, err := os.ReadFile(p)
+			_, err = os.ReadFile(p)
 			must.NoError(t, err)
 		}
 	}
 
-	// This part gets run in each sub-process. It is the actual
-	// test case, and must return non-zero on test case failure.
-	// Using t to fail is fine.
-	if env := os.Getenv("TEST"); env != "" {
-		num, _ := strconv.Atoi(env)
-		try(num)
+	cases := map[string]func(){
+		"none": func() {
+			try(testCase{
+				paths:   nil,
+				success: nil,
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/fruits",
+					"tests/fruits/apple.txt",
+				}},
+			)
+		},
+		"write only file": func() {
+			try(testCase{
+				paths: []string{"f:w:tests/Labels.txt"},
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/fruits/apple.txt",
+				},
+			})
+		},
+		"write only dir": func() {
+			try(testCase{
+				paths:   []string{"d:w:tests/"},
+				success: nil,
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/fruits/apple.txt",
+				},
+			})
+		},
+		"read top file": func() {
+			try(testCase{
+				paths:   []string{"f:r:tests/Labels.txt"},
+				success: []string{"tests/Labels.txt"},
+				failure: []string{
+					"tests/fruits/apple.txt",
+					"tests/fruits/banana.txt",
+					"tests/veggies/celary.txt",
+					"tests/veggies/corn.txt",
+					"tests/veggies/unsure/beans.txt",
+				},
+			})
+		},
+		"read top dir": func() {
+			try(testCase{
+				paths: []string{"d:r:tests"},
+				success: []string{
+					"tests/Labels.txt",
+					"tests/fruits/apple.txt",
+					"tests/fruits/banana.txt",
+					"tests/veggies/celary.txt",
+					"tests/veggies/corn.txt",
+					"tests/veggies/unsure/beans.txt",
+				},
+			})
+		},
+		"read fruits dir": func() {
+			try(testCase{
+				paths: []string{"d:r:tests/fruits"},
+				success: []string{
+					"tests/fruits/apple.txt",
+					"tests/fruits/banana.txt",
+				},
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/veggies/celary.txt",
+					"tests/veggies/corn.txt",
+					"tests/veggies/unsure/beans.txt",
+				},
+			})
+		},
+		"read beans file": func() {
+			try(testCase{
+				paths: []string{"f:r:tests/veggies/unsure/beans.txt"},
+				success: []string{
+					"tests/veggies/unsure/beans.txt",
+				},
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/fruits/apple.txt",
+					"tests/fruits/banana.txt",
+					"tests/veggies/corn.txt",
+					"tests/veggies/celary.txt",
+				},
+			})
+		},
+		"read mixed file": func() {
+			try(testCase{
+				paths: []string{
+					// "f:rw:tests/veggies/corn.txt", // should this work?
+					"f:rw:tests/fruits/apple.txt",
+				},
+				success: []string{
+					"tests/fruits/apple.txt",
+				},
+				failure: []string{
+					"tests/Labels.txt",
+					"tests/veggies/corn.txt",
+					"tests/fruits/banana.txt",
+					"tests/veggies/celary.txt",
+				},
+			})
+		},
+		"etc directory": func() {
+			try(testCase{
+				paths:   []string{"d:r:/etc"},
+				success: []string{"/etc/passwd"},
+				failure: []string{"/bin/sh"},
+			})
+		},
+	}
+
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	// This part is the normal test runner. It launches a sub-process
-	// for each test case, so we can observe .Lock() behavior more
-	// than just once.
-	for i, tc := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_reads/%s", tc.name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%d", i))
-		b, err := cmd.CombinedOutput()
-		t.Logf("TEST[%d] (arg: %s)\n\t|> %s\n\n", i, arg, string(b))
-		must.NoError(t, err)
-	}
-}
-
-func tmpFile(t *testing.T, name, content string) string {
-	dir := os.TempDir() // cannot use t.TempDir
-	f := filepath.Join(dir, name)
-	err := os.WriteFile(f, []byte(content), 0o644)
-	must.NoError(t, err)
-	return f
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_reads", cases)
 }
 
 func TestLocker_writes(t *testing.T) {
@@ -288,35 +275,13 @@ func TestLocker_writes(t *testing.T) {
 		},
 	}
 
-	// This part gets run in each sub-process; it is the actual test
-	// case, and must return non-zero on test failure.
-	if name := os.Getenv("TEST"); name != "" {
-		f := cases[name]
-		f()
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	// This part is the normal test runner. It launches a sub-process
-	// for each test case so we can observe landlock behavior more than
-	// just once.
-	for name := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_writes/%s", name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
-		b, err := cmd.CombinedOutput()
-		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
-		must.NoError(t, err)
-	}
-}
-
-// random will create a random text file name
-func random() string {
-	n := 6
-	b := make([]byte, n)
-	for i := 0; i < n; i++ {
-		b[i] = byte(rand.Int()%26 + 97)
-	}
-	return string(b) + ".txt"
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_writes", cases)
 }
 
 func TestLocker_creates(t *testing.T) {
@@ -354,20 +319,13 @@ func TestLocker_creates(t *testing.T) {
 		},
 	}
 
-	if name := os.Getenv("TEST"); name != "" {
-		f := cases[name]
-		f()
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	for name := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_creates/%s", name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
-		b, err := cmd.CombinedOutput()
-		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
-		must.NoError(t, err)
-	}
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_creates", cases)
 }
 
 func TestLocker_executes(t *testing.T) {
@@ -424,25 +382,13 @@ func TestLocker_executes(t *testing.T) {
 		},
 	}
 
-	if name := os.Getenv("TEST"); name != "" {
-		f := cases[name]
-		f()
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	for name := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_executes/%s", name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
-		b, err := cmd.CombinedOutput()
-		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
-		must.NoError(t, err)
-	}
-}
-
-func writef(t *testing.T, path, content string, mode fs.FileMode) {
-	err := os.WriteFile(path, []byte(content), mode)
-	must.NoError(t, err)
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_executes", cases)
 }
 
 func TestLocker_deletes(t *testing.T) {
@@ -498,25 +444,13 @@ func TestLocker_deletes(t *testing.T) {
 		},
 	}
 
-	// This part gets run in each sub-process; it is the actual test
-	// case, and must return non-zero on test failure.
-	if name := os.Getenv("TEST"); name != "" {
-		f := cases[name]
-		f()
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	// This part is the normal test runner. It launches a sub-process
-	// for each test case so we can observe landlock behavior more than
-	// just once.
-	for name := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_deletes/%s", name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
-		b, err := cmd.CombinedOutput()
-		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
-		must.NoError(t, err)
-	}
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_deletes", cases)
 }
 
 func TestLocker_symlink(t *testing.T) {
@@ -553,19 +487,55 @@ func TestLocker_symlink(t *testing.T) {
 		},
 	}
 
-	// This part gets run in each sub-process; it is the actual test
-	// case, and must return non-zero on test failure.
-	if name := os.Getenv("TEST"); name != "" {
-		f := cases[name]
-		f()
+	// if we are child process, run the assigned test case
+	if runCasesAsChild(cases) {
 		return
 	}
 
-	// This part is the normal test runner. It launches a sub-process
-	// for each test case so we can observe landlock behavior more than
-	// just once.
+	// otherwise if we are parent process, launch child processes
+	forkCases(t, "TestLocker_symlink", cases)
+}
+
+func writef(t *testing.T, path, content string, mode fs.FileMode) {
+	err := os.WriteFile(path, []byte(content), mode)
+	must.NoError(t, err)
+}
+
+func tmpFile(t *testing.T, name, content string) string {
+	dir := os.TempDir() // cannot use t.TempDir
+	f := filepath.Join(dir, name)
+	err := os.WriteFile(f, []byte(content), 0o644)
+	must.NoError(t, err)
+	return f
+}
+
+// random will create a random text file name
+func random() string {
+	n := 6
+	b := make([]byte, n)
+	for i := 0; i < n; i++ {
+		b[i] = byte(rand.Int()%26 + 97)
+	}
+	return string(b) + ".txt"
+}
+
+// This part gets run in each sub-process; it is the actual test
+// case, and must return non-zero on test failure.
+func runCasesAsChild(cases map[string]func()) bool {
+	if name := os.Getenv("TEST"); name != "" {
+		f := cases[name]
+		f()
+		return true
+	}
+	return false
+}
+
+// This part is the normal test runner. It launches a sub-process
+// for each test case so we can observe landlock behavior more than
+// just once.
+func forkCases(t *testing.T, prefix string, cases map[string]func()) {
 	for name := range cases {
-		arg := fmt.Sprintf("-test.run=TestLocker_symlink/%s", name)
+		arg := fmt.Sprintf("-test.run=%s/%s", prefix, name)
 		cmd := exec.Command(os.Args[0], arg)
 		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
 		b, err := cmd.CombinedOutput()
