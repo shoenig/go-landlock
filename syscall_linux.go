@@ -49,16 +49,16 @@ func abi() (int, error) {
 		0,
 		unix.LANDLOCK_CREATE_RULESET_VERSION,
 	)
-	version := int(r0)
+	v := int(r0)
 	switch {
 	case e1 != 0:
-		return version, syscall.Errno(e1)
-	case version < 0:
+		return v, syscall.Errno(e1)
+	case v < 0:
 		return 0, ErrVersionUndetectable
-	case version == 0:
+	case v == 0:
 		return 0, ErrNotSupported
-	case version == 1 || version == 2:
-		return version, nil
+	case v == 1 || v == 2:
+		return v, nil
 	default:
 		return 0, ErrVersionUnexpected
 	}

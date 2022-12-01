@@ -106,6 +106,16 @@ func init() {
 	})
 }
 
+const (
+	modeShared = "1"
+	modeStdio  = "2"
+	modeTTY    = "3"
+	modeTmp    = "4"
+	modeVMInfo = "5"
+	modeDNS    = "6"
+	modeCerts  = "7"
+)
+
 func load(paths []*Path) []*Path {
 	result := make([]*Path, 0, len(paths))
 	for _, p := range paths {
@@ -159,13 +169,3 @@ func DNS() *Path {
 func Certs() *Path {
 	return &Path{mode: modeCerts}
 }
-
-const (
-	modeShared = "1"
-	modeStdio  = "2"
-	modeTTY    = "3"
-	modeTmp    = "4"
-	modeVMInfo = "5"
-	modeDNS    = "6"
-	modeCerts  = "7"
-)
