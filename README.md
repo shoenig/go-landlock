@@ -1,5 +1,7 @@
 # go-landlock
 
+<img align="right" width="240" height="257" src="https://i.imgur.com/uOcXkpt.png">
+
 [![GoDoc](https://godoc.org/github.com/shoenig/go-landlock?status.svg)](https://godoc.org/github.com/shoenig/go-landlock)
 [![Go Report Card](https://goreportcard.com/badge/github.com/shoenig/go-landlock)](https://goreportcard.com/report/github.com/shoenig/go-landlock)
 [![CI Tests](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml/badge.svg)](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml)
