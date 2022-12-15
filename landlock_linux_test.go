@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
@@ -192,12 +193,12 @@ func TestLocker_reads(t *testing.T) {
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_reads", cases)
+	forkAndRunEachCase(t, "TestLocker_reads", cases)
 }
 
 func TestLocker_writes(t *testing.T) {
@@ -276,12 +277,12 @@ func TestLocker_writes(t *testing.T) {
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_writes", cases)
+	forkAndRunEachCase(t, "TestLocker_writes", cases)
 }
 
 func TestLocker_creates(t *testing.T) {
@@ -320,12 +321,12 @@ func TestLocker_creates(t *testing.T) {
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_creates", cases)
+	forkAndRunEachCase(t, "TestLocker_creates", cases)
 }
 
 func TestLocker_executes(t *testing.T) {
@@ -383,12 +384,12 @@ func TestLocker_executes(t *testing.T) {
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_executes", cases)
+	forkAndRunEachCase(t, "TestLocker_executes", cases)
 }
 
 func TestLocker_deletes(t *testing.T) {
@@ -403,8 +404,8 @@ func TestLocker_deletes(t *testing.T) {
 		"rm_file": func() {
 			f1 := filepath.Join(os.TempDir(), random())
 			f2 := filepath.Join(os.TempDir(), random())
-			writef(t, f1, "one", 0o644)
-			writef(t, f2, "two", 0o644)
+			writeFile(t, f1, "one", 0o644)
+			writeFile(t, f2, "two", 0o644)
 			l := New(File(f1, "rwc"), File(f2, "r"))
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
@@ -415,7 +416,7 @@ func TestLocker_deletes(t *testing.T) {
 		},
 		"rm_dir_rm_file": func() {
 			f := filepath.Join(os.TempDir(), random())
-			writef(t, f, "one", 0o644)
+			writeFile(t, f, "one", 0o644)
 			l := New(Dir(filepath.Dir(f), "rwc"))
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
@@ -445,58 +446,183 @@ func TestLocker_deletes(t *testing.T) {
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_deletes", cases)
+	forkAndRunEachCase(t, "TestLocker_deletes", cases)
 }
 
 func TestLocker_symlink(t *testing.T) {
 	cases := map[string]func(){
 		"read_escape": func() {
 			d := os.TempDir()
-			source := filepath.Join(d, random())
-			destination := "/etc/passwd"
-			err := os.Symlink(destination, source)
+			next := filepath.Join(d, random())
+			old := "/etc/passwd"
+			err := os.Symlink(old, next)
 			must.NoError(t, err)
 
 			l := New(Dir(d, "r"))
 			err = l.Lock(Mandatory)
 			must.NoError(t, err)
 
-			_, err = os.ReadFile(source)
+			_, err = os.ReadFile(next)
 			must.Error(t, err)
 		},
 		"create_escape": func() {
 			d := os.TempDir()
-			source := filepath.Join(d, random())
-			destination := "/etc/passwd"
+			next := filepath.Join(d, random())
+			old := "/etc/passwd"
 
 			l := New(Dir(d, "rwc"))
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
 
-			err = os.Symlink(destination, source)
+			err = os.Symlink(old, next)
 			must.NoError(t, err) // creating symlink is allowable;
 			// FS_REFER is about hardlinks and mounts
 
-			_, err = os.ReadFile(source)
+			_, err = os.ReadFile(next)
 			must.Error(t, err) // cannot read the symlink
 		},
 	}
 
 	// if we are child process, run the assigned test case
-	if runCasesAsChild(cases) {
+	if isChildRunner(cases) {
 		return
 	}
 
 	// otherwise if we are parent process, launch child processes
-	forkCases(t, "TestLocker_symlink", cases)
+	forkAndRunEachCase(t, "TestLocker_symlink", cases)
 }
 
-func writef(t *testing.T, path, content string, mode fs.FileMode) {
+func TestLocker_hardlink(t *testing.T) {
+	cases := map[string]func(){
+		"read_existing_link": func() {
+			// a hardlink is as good as the real thing; if there is a pre-existing
+			// link going outside the sandbox, we are still able to read it
+			target := filepath.Join(os.Getenv("HOME"), ".profile")
+
+			d := os.TempDir()
+			next := filepath.Join(d, random())
+
+			err := os.Link(target, next)
+			must.NoError(t, err)
+
+			l := New(Dir(d, "r"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+
+			_, err = os.ReadFile(next)
+			must.NoError(t, err)
+		},
+		"create_escape_link": func() {
+			d := os.TempDir()
+			next := filepath.Join(d, random())
+
+			l := New(Dir(d, "rwc"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+
+			target := filepath.Join(os.Getenv("HOME"), ".profile")
+
+			// creating a hardlink outside the sandbox is blocked
+			err = os.Link(target, next)
+			must.Error(t, err)
+		},
+		"create_internal_link": func() {
+			d := os.TempDir()
+
+			next := filepath.Join(d, random())
+			old := filepath.Join(d, random())
+			writeFile(t, old, "hello", 0o644)
+
+			l := New(Dir(d, "rwc"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+
+			// creating a hardlink within the sandbox is fine
+			err = os.Link(old, next)
+			must.NoError(t, err)
+
+			// reading the hardlink should be fine
+			_, err = os.ReadFile(next)
+			must.NoError(t, err)
+		},
+	}
+
+	// if we are child process we run the assigned case and then exit
+	if isChildRunner(cases) {
+		return
+	}
+
+	// otherwise if we are parent process, launch child processes
+	forkAndRunEachCase(t, "TestLocker_hardlink", cases)
+}
+
+func TestLocker_mount(t *testing.T) {
+	if syscall.Geteuid() != 0 {
+		t.Skip("must be root to run mount tests")
+	}
+
+	cases := map[string]func(){
+		"read_existing_mount": func() {
+			d := os.TempDir()
+			mountpoint := filepath.Join(d, random())
+			_, err := os.Create(mountpoint)
+			must.NoError(t, err)
+
+			// setup the mountpoint with a file that should be overridden
+			writeFile(t, "should be overridden", mountpoint, 0o644)
+
+			cmd := exec.Command("mount", "--bind", "/etc/os-release", "--target", mountpoint)
+			output, cmdErr := cmd.CombinedOutput()
+			fmt.Println("output", string(output))
+			must.NoError(t, cmdErr, must.Sprintf("mount failure: %s", string(output)))
+
+			// sandbox excludes mount source
+			l := New(Dir(d, "rwc"))
+			lockErr := l.Lock(Mandatory)
+			must.NoError(t, lockErr)
+
+			// we can read the mount; exists before the lockdown
+			// and prove the mount source is actually mounted over the original
+			b, readErr := os.ReadFile(mountpoint)
+			must.NoError(t, readErr)
+			must.StrContains(t, string(b), "PRETTY_NAME")
+			must.StrNotContains(t, string(b), "should be overridden")
+		},
+		"create_escaping_mount": func() {
+			d := os.TempDir()
+			mountpoint := filepath.Join(d, random())
+			_, err := os.Create(mountpoint)
+			must.NoError(t, err)
+
+			source := "/etc/os-release"
+
+			// sandbox excludes mount source
+			l := New(Dir(d, "rwc"))
+			lockErr := l.Lock(Mandatory)
+			must.NoError(t, lockErr)
+
+			// landlock will prevent creating this mount
+			cmd := exec.Command("mount", "--bind", source, "--target", mountpoint)
+			_, cmdErr := cmd.CombinedOutput()
+			must.ErrorContains(t, cmdErr, "permission denied")
+		},
+	}
+
+	// if we are child process we run the assigned case and then exit
+	if isChildRunner(cases) {
+		return
+	}
+
+	// otherwise if we are parent process, launch child processes
+	forkAndRunEachCase(t, "TestLocker_mount", cases)
+}
+
+func writeFile(t *testing.T, path, content string, mode fs.FileMode) {
 	err := os.WriteFile(path, []byte(content), mode)
 	must.NoError(t, err)
 }
@@ -521,7 +647,7 @@ func random() string {
 
 // This part gets run in each sub-process; it is the actual test
 // case, and must return non-zero on test failure.
-func runCasesAsChild(cases map[string]func()) bool {
+func isChildRunner(cases map[string]func()) bool {
 	if name := os.Getenv("TEST"); name != "" {
 		f := cases[name]
 		f()
@@ -533,7 +659,7 @@ func runCasesAsChild(cases map[string]func()) bool {
 // This part is the normal test runner. It launches a sub-process
 // for each test case so we can observe landlock behavior more than
 // just once.
-func forkCases(t *testing.T, prefix string, cases map[string]func()) {
+func forkAndRunEachCase(t *testing.T, prefix string, cases map[string]func()) {
 	for name := range cases {
 		arg := fmt.Sprintf("-test.run=%s/%s", prefix, name)
 		cmd := exec.Command(os.Args[0], arg)
