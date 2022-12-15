@@ -15,8 +15,13 @@ import (
 type Safety byte
 
 const (
-	// Mandatory mode will return an error on failure.
+	// Mandatory mode will return an error on failure, including on
+	// systems where landlock is not supported.
 	Mandatory Safety = iota
+
+	// OnlySupported will return an error on failure if running
+	// on a supported operating system, or no error otherwise
+	OnlySupported
 
 	// Try mode will continue with no error on failure.
 	Try

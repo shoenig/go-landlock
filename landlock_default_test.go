@@ -22,6 +22,12 @@ func TestLocker_Lock_Try(t *testing.T) {
 	must.NoError(t, err)
 }
 
+func TestLocker_Lock_OnlySupported(t *testing.T) {
+	l := New()
+	err := l.Lock(OnlySupported)
+	must.NoError(t, err)
+}
+
 func TestLocker_String(t *testing.T) {
 	l := New()
 	s := l.String()
