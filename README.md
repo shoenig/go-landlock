@@ -2,8 +2,7 @@
 
 <img align="right" width="240" height="257" src="https://i.imgur.com/uOcXkpt.png">
 
-[![GoDoc](https://godoc.org/github.com/shoenig/go-landlock?status.svg)](https://godoc.org/github.com/shoenig/go-landlock)
-[![Go Report Card](https://goreportcard.com/badge/github.com/shoenig/go-landlock)](https://goreportcard.com/report/github.com/shoenig/go-landlock)
+[![Go Reference](https://pkg.go.dev/badge/github.com/shoenig/go-landlock.svg)](https://pkg.go.dev/github.com/shoenig/go-landlock)
 [![CI Tests](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml/badge.svg)](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
