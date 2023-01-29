@@ -68,7 +68,7 @@ func (l *locker) lock() error {
 		return err
 	}
 
-	list := l.paths.List()
+	list := l.paths.Slice()
 	for _, path := range list {
 		if err = l.lockOne(path, fd); err != nil {
 			return err
