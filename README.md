@@ -4,7 +4,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/shoenig/go-landlock.svg)](https://pkg.go.dev/github.com/shoenig/go-landlock)
 [![CI Tests](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml/badge.svg)](https://github.com/shoenig/go-landlock/actions/workflows/ci.yaml)
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-orange.svg)](https://opensource.org/licenses/MPL-2.0)
 
 The `go-landlock` module provides a Go library for interfacing with the Linux kernel
 landlock feature. Landlock is a mechanism for minimizing filesystem access to a
