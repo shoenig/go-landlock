@@ -17,9 +17,6 @@ var (
 
 	// ErrNotSupported indicates landlock is not supported on this system
 	ErrNotSupported = errors.New("landlock not supported")
-
-	// ErrVersionUnexpected indicates the reported landlock version is unexpected
-	ErrVersionUnexpected = errors.New("landlock version unexpected")
 )
 
 type rule uint64
@@ -57,10 +54,8 @@ func abi() (int, error) {
 		return 0, ErrVersionUndetectable
 	case v == 0:
 		return 0, ErrNotSupported
-	case v == 1 || v == 2:
-		return v, nil
 	default:
-		return 0, ErrVersionUnexpected
+		return v, nil
 	}
 }
 
