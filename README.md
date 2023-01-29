@@ -76,6 +76,7 @@ of safety is configured by passing either `Mandatory` or `Try`.
 
 - `Mandatory` : return an error is Landlock is unsupported or activation causes an error
 - `Try` : continue without error regardless if landlock is supported or working
+- `OnlySupported` : like `Mandatory`, but returns no error if the operating system does not support landlock
 
 Once a process has been locked, it cannot be unlocked. Any descendent processes of the
 locked process will also be locked, and cannot be unlocked. A child process can further
