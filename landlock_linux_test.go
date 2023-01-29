@@ -502,19 +502,33 @@ func TestLocker_hardlink(t *testing.T) {
 		"read_existing_link": func() {
 			// a hardlink is as good as the real thing; if there is a pre-existing
 			// link going outside the sandbox, we are still able to read it
-			target := filepath.Join(os.Getenv("HOME"), ".profile")
-
-			d := os.TempDir()
-			next := filepath.Join(d, random())
-
-			err := os.Link(target, next)
+			root := filepath.Join(os.TempDir(), randomDir())
+			err := os.Mkdir(root, 0755)
 			must.NoError(t, err)
 
-			l := New(Dir(d, "r"))
+			targetDir := filepath.Join(root, "target")
+			sandboxDir := filepath.Join(root, "sandbox")
+
+			err = os.Mkdir(targetDir, 0755)
+			must.NoError(t, err)
+
+			err = os.MkdirAll(sandboxDir, 0755)
+			must.NoError(t, err)
+
+			targetFile := filepath.Join(targetDir, "secrets.txt")
+			err = os.WriteFile(targetFile, []byte("p4ssw0rd"), 0644)
+			must.NoError(t, err)
+
+			link := filepath.Join(sandboxDir, "link.txt")
+
+			err = os.Link(targetFile, link)
+			must.NoError(t, err)
+
+			l := New(Dir(sandboxDir, "r"))
 			err = l.Lock(Mandatory)
 			must.NoError(t, err)
 
-			_, err = os.ReadFile(next)
+			_, err = os.ReadFile(link)
 			must.NoError(t, err)
 		},
 		"create_escape_link": func() {
@@ -643,6 +657,15 @@ func random() string {
 		b[i] = byte(rand.Int()%26 + 97)
 	}
 	return string(b) + ".txt"
+}
+
+func randomDir() string {
+	n := 6
+	b := make([]byte, n)
+	for i := 0; i < n; i++ {
+		b[i] = byte(rand.Int()%26 + 97)
+	}
+	return string(b)
 }
 
 // This part gets run in each sub-process; it is the actual test
