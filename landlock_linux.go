@@ -54,7 +54,7 @@ func (l *locker) Lock(s Safety) error {
 }
 
 func (l *locker) String() string {
-	return l.paths.String(func(p *Path) string {
+	return l.paths.StringFunc(func(p *Path) string {
 		return fmt.Sprintf("%s:%s", p.mode, p.path)
 	})
 }
