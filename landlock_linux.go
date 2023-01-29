@@ -54,7 +54,7 @@ func (l *locker) Lock(s Safety) error {
 }
 
 func (l *locker) String() string {
-	return l.paths.String(func(p *Path) string {
+	return l.paths.StringFunc(func(p *Path) string {
 		return fmt.Sprintf("%s:%s", p.mode, p.path)
 	})
 }
@@ -68,7 +68,7 @@ func (l *locker) lock() error {
 		return err
 	}
 
-	list := l.paths.List()
+	list := l.paths.Slice()
 	for _, path := range list {
 		if err = l.lockOne(path, fd); err != nil {
 			return err
