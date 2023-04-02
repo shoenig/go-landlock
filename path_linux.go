@@ -14,14 +14,15 @@ func (p *Path) access() rule {
 			directory := fsReadFile | fsReadDir
 			allow |= ifelse(p.dir, directory, fsReadFile)
 		case 'w':
-			allow |= fsWriteFile | fsTruncate
+			allow |= fsWriteFile
+			allow |= ifelse(version >= 3, fsTruncate, 0)
 		case 'x':
 			allow |= fsExecute
 		case 'c':
 			directory := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock |
 				fsMakeSymlink | fsMakeDir | fsRemoveFile | fsRemoveDir
 			allow |= ifelse(p.dir, directory, 0)
-			allow |= ifelse(p.dir && version > 1, fsRefer, 0)
+			allow |= ifelse(p.dir && version >= 2, fsRefer, 0)
 		}
 	}
 	return allow
