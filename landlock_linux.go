@@ -11,6 +11,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+var (
+	ErrLandlockNotAvailable = errors.New("landlock not available")
+	ErrLandlockFailedToLock = errors.New("landlock failed to lock")
+)
+
 type locker struct {
 	paths *set.HashSet[*Path, string]
 }
@@ -42,12 +47,15 @@ func New(paths ...*Path) Locker {
 }
 
 func (l *locker) Lock(s Safety) error {
-	if !available && s != Try {
-		return errors.New("landlock not available")
+	if !available {
+		if s == Try || s == OnlyAvailable {
+			return nil
+		}
+		return ErrLandlockNotAvailable
 	}
 
 	if err := l.lock(); err != nil && s != Try {
-		return fmt.Errorf("landlock failed to lock: %w", err)
+		return errors.Join(ErrLandlockFailedToLock, err)
 	}
 
 	return nil
