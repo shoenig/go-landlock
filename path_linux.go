@@ -14,7 +14,7 @@ func (p *Path) access() rule {
 			directory := fsReadFile | fsReadDir
 			allow |= IfElse(p.dir, directory, fsReadFile)
 		case 'w':
-			allow |= fsWriteFile
+			allow |= fsWriteFile | fsTruncate
 		case 'x':
 			allow |= fsExecute
 		case 'c':

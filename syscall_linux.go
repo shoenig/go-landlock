@@ -37,6 +37,7 @@ const (
 	fsMakeBlock   rule = unix.LANDLOCK_ACCESS_FS_MAKE_BLOCK
 	fsMakeSymlink rule = unix.LANDLOCK_ACCESS_FS_MAKE_SYM
 	fsRefer       rule = unix.LANDLOCK_ACCESS_FS_REFER
+	fsTruncate    rule = unix.LANDLOCK_ACCESS_FS_TRUNCATE
 )
 
 func abi() (int, error) {
@@ -67,6 +68,9 @@ func capabilities() rule {
 		fsMakeFifo | fsMakeBlock | fsMakeSymlink
 	if version >= 2 {
 		opts |= fsRefer
+	}
+	if version >= 3 {
+		opts |= fsTruncate
 	}
 	return opts
 }
