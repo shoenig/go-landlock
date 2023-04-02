@@ -12,14 +12,9 @@ import (
 	"path/filepath"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/shoenig/test/must"
 )
-
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
 
 func TestLocker_New(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
