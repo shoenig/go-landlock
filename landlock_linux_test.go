@@ -281,6 +281,8 @@ func TestLocker_writes(t *testing.T) {
 }
 
 func TestLocker_truncate(t *testing.T) {
+	requiresVersion(t, 3)
+
 	cases := map[string]func(){
 		"truncate_none": func() {
 			f := tmpFile(t, "hi.txt", "hello")
@@ -744,5 +746,11 @@ func forkAndRunEachCase(t *testing.T, prefix string, cases map[string]func()) {
 		b, err := cmd.CombinedOutput()
 		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
 		must.NoError(t, err)
+	}
+}
+
+func requiresVersion(t *testing.T, v int) {
+	if version < v {
+		t.Skipf("version of landlock not high enough for test; need %d, got %d", v, version)
 	}
 }
