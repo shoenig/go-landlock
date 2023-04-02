@@ -19,9 +19,17 @@ const (
 	// systems where landlock is not supported.
 	Mandatory Safety = iota
 
-	// OnlySupported will return an error on failure if running
-	// on a supported operating system, or no error otherwise
+	// OnlySupported will return an error on failure if running on a supported
+	// operating system (Linux), or no error otherwise. Unlike OnlyAvailable,
+	// this includes returning an error on systems where the Linux kernel was
+	// built without landlock support.
 	OnlySupported
+
+	// OnlyAvailable will return an error on failure if running in an environment
+	// where landlock is detected and available, or no error otherwise. Unlike
+	// OnlySupported, OnlyAvailable does not cause an error on Linux systems built
+	// without landlock support.
+	OnlyAvailable
 
 	// Try mode will continue with no error on failure.
 	Try

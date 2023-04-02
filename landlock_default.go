@@ -24,6 +24,8 @@ func New(...*Path) Locker {
 
 func (l *locker) Lock(s Safety) error {
 	switch s {
+	case OnlyAvailable:
+		return nil
 	case OnlySupported:
 		return nil
 	case Try:
