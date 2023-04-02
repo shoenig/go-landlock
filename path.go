@@ -47,7 +47,7 @@ func (p *Path) Hash() string {
 }
 
 func (p *Path) String() string {
-	kind := IfElse(p.dir, "dir", "file")
+	kind := ifelse(p.dir, "dir", "file")
 	return fmt.Sprintf("(%s:%s:%s)", p.mode, kind, p.path)
 }
 
@@ -119,7 +119,7 @@ func parsePath(filetype, mode, path string) (*Path, error) {
 	case !IsProperPath(path):
 		return nil, ErrImproperPath
 	}
-	dir := IfElse(filetype == "d", true, false)
+	dir := ifelse(filetype == "d", true, false)
 	return &Path{
 		mode: mode,
 		path: path,
@@ -153,7 +153,7 @@ func IsProperPath(path string) bool {
 	return path != ""
 }
 
-func IfElse[T any](condition bool, result T, otherwise T) T {
+func ifelse[T any](condition bool, result T, otherwise T) T {
 	if condition {
 		return result
 	}

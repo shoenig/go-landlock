@@ -12,7 +12,7 @@ func (p *Path) access() rule {
 		switch c {
 		case 'r':
 			directory := fsReadFile | fsReadDir
-			allow |= IfElse(p.dir, directory, fsReadFile)
+			allow |= ifelse(p.dir, directory, fsReadFile)
 		case 'w':
 			allow |= fsWriteFile | fsTruncate
 		case 'x':
@@ -20,8 +20,8 @@ func (p *Path) access() rule {
 		case 'c':
 			directory := fsMakeRegular | fsMakeSocket | fsMakeFifo | fsMakeBlock |
 				fsMakeSymlink | fsMakeDir | fsRemoveFile | fsRemoveDir
-			allow |= IfElse(p.dir, directory, 0)
-			allow |= IfElse(p.dir && version > 1, fsRefer, 0)
+			allow |= ifelse(p.dir, directory, 0)
+			allow |= ifelse(p.dir && version > 1, fsRefer, 0)
 		}
 	}
 	return allow
