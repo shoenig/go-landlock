@@ -280,6 +280,65 @@ func TestLocker_writes(t *testing.T) {
 	forkAndRunEachCase(t, "TestLocker_writes", cases)
 }
 
+func TestLocker_truncate(t *testing.T) {
+	cases := map[string]func(){
+		"truncate_none": func() {
+			f := tmpFile(t, "hi.txt", "hello")
+			l := New()
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Truncate(f, 1024)
+			must.Error(t, err)
+		},
+		"truncate_file_rcx": func() {
+			f := tmpFile(t, "hi.txt", "hello")
+			l := New(File(f, "rcx"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Truncate(f, 1024)
+			must.Error(t, err)
+		},
+		"truncate_file_w": func() {
+			f := tmpFile(t, "hi.txt", "hello")
+			l := New(File(f, "w"))
+			err := l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Truncate(f, 1024)
+			must.NoError(t, err)
+		},
+		"truncate_dir_rcx": func() {
+			f := filepath.Join(os.TempDir(), random())
+			err := os.WriteFile(f, []byte("hello"), 0644)
+			must.NoError(t, err)
+			dir := filepath.Dir(f)
+			l := New(Dir(dir, "rcx"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Truncate(f, 1024)
+			must.Error(t, err)
+		},
+		"truncate_dir_w": func() {
+			f := filepath.Join(os.TempDir(), random())
+			err := os.WriteFile(f, []byte("hello"), 0o644)
+			must.NoError(t, err)
+			dir := filepath.Dir(f)
+			l := New(Dir(dir, "w"))
+			err = l.Lock(Mandatory)
+			must.NoError(t, err)
+			err = os.Truncate(f, 1024)
+			must.NoError(t, err)
+		},
+	}
+
+	// if we are child process, run the assigned test case
+	if isChildRunner(cases) {
+		return
+	}
+
+	// otherwise if we are parent, launch child process
+	forkAndRunEachCase(t, "TestLocker_truncate", cases)
+}
+
 func TestLocker_creates(t *testing.T) {
 	cases := map[string]func(){
 		"none": func() {
