@@ -1,3 +1,6 @@
+// Copyright (c) Seth Hoenig
+// SPDX-License-Identifier: MPL-2.0
+
 // Package landlock provides a Go library for using the
 // landlock feature of the modern Linux kernel.
 //
