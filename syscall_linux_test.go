@@ -1,3 +1,6 @@
+// Copyright (c) Seth Hoenig
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build linux
 
 package landlock
