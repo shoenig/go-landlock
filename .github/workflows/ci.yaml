@@ -1,6 +1,14 @@
 name: Run CI Tests
 on: [push]
 jobs:
+  run-lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.55.1
+          skip-cache: true
   run-tests:
     strategy:
       fail-fast: false
@@ -8,18 +16,14 @@ jobs:
         os:
           - ubuntu-22.04
           - ubuntu-20.04
-          - macos-12
+          - macos-13
           - windows-2022
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: hashicorp/setup-golang@v1
         with:
           version-file: go.mod
-      - uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.52.2
-          skip-cache: true
       - name: Run Go Test
         run: |
           go test -race -v ./...
