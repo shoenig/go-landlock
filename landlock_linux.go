@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/hashicorp/go-set"
+	"github.com/hashicorp/go-set/v2"
 	"golang.org/x/sys/unix"
 )
 
@@ -22,23 +22,23 @@ type locker struct {
 
 // New creates a Locker that allows the given paths and permissions.
 func New(paths ...*Path) Locker {
-	s := set.NewHashSet[*Path, string](10)
+	s := set.NewHashSet[*Path](10)
 	for _, path := range paths {
 		switch path.mode {
 		case modeShared:
-			s.InsertAll(shared)
+			s.InsertSlice(shared)
 		case modeStdio:
-			s.InsertAll(stdio)
+			s.InsertSlice(stdio)
 		case modeTTY:
-			s.InsertAll(tty)
+			s.InsertSlice(tty)
 		case modeTmp:
-			s.InsertAll(tmp)
+			s.InsertSlice(tmp)
 		case modeVMInfo:
-			s.InsertAll(vminfo)
+			s.InsertSlice(vminfo)
 		case modeDNS:
-			s.InsertAll(dns)
+			s.InsertSlice(dns)
 		case modeCerts:
-			s.InsertAll(certs)
+			s.InsertSlice(certs)
 		default:
 			s.Insert(path)
 		}
