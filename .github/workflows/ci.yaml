@@ -12,6 +12,15 @@ jobs:
         with:
           version: v1.55.1
           skip-cache: true
+  run-copywrite:
+    runs-on:
+      ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-copywrite@v1.1.2
+      - name: verify copyright
+        run: |
+          copywrite headers --plan
   run-tests:
     strategy:
       fail-fast: false
