@@ -4,7 +4,7 @@ github.com/hashicorp/go-set/v2 v2.0.0-alpha.3 h1:ZpDBhigUACKvj4pVS973badI8ult/5U
 github.com/hashicorp/go-set/v2 v2.0.0-alpha.3/go.mod h1:6q4nh8UCVZODn2tJ5RbJi8+ki7pjZBsAEYGt6yaGeTo=
 github.com/shoenig/test v0.6.7 h1:k92ohN9VyRfZn0ezNfwamtIBT/5byyfLVktRmL/Jmek=
 github.com/shoenig/test v0.6.7/go.mod h1:byHiCGXqrVaflBLAMq/srcZIHynQPQgeyvkvXnjqq0k=
-golang.org/x/sys v0.11.0 h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=
-golang.org/x/sys v0.11.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.13.0 h1:Af8nKPmuFypiUBjVoU9V20FiaFXOcuZI21p0ycVYYGE=
+golang.org/x/sys v0.13.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 kernel.org/pub/linux/libs/security/libcap/psx v1.2.69 h1:IdrOs1ZgwGw5CI+BH6GgVVlOt+LAXoPyh7enr8lfaXs=
 kernel.org/pub/linux/libs/security/libcap/psx v1.2.69/go.mod h1:+l6Ee2F59XiJ2I6WR5ObpC1utCQJZ/VLsEbQCD8RG24=
