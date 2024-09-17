@@ -19,5 +19,11 @@ func Test_Available(t *testing.T) {
 func Test_Detect(t *testing.T) {
 	v, err := Detect()
 	must.NoError(t, err)
-	must.Between(t, 1, v, 3)
+
+	const (
+		minimum = 1 // always 1
+		maximum = 4 // periodically update
+	)
+
+	must.Between(t, minimum, v, maximum)
 }
