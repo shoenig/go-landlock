@@ -51,6 +51,7 @@ func init() {
 		Dir("/lib", "rx"),
 		Dir("/lib64", "rx"),
 		Dir("/usr/lib", "rx"),
+		Dir("/usr/lib64", "rx"),
 		Dir("/usr/libexec", "rx"),
 		Dir("/usr/local/lib", "rx"),
 		Dir("/usr/local/lib64", "rx"),
