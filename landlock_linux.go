@@ -90,6 +90,10 @@ func (l *locker) lock() error {
 		return err
 	}
 
+	if err = addProcTaskRule(fd); err != nil {
+		return err
+	}
+
 	if err = restrict(fd); err != nil {
 		return err
 	}
