@@ -57,7 +57,7 @@ func TestLocker_reads(t *testing.T) {
 	}
 
 	try := func(tc testCase) {
-		var paths []*Path
+		paths := make([]*Path, 0, len(tc.paths))
 		for _, path := range tc.paths {
 			p, err := ParsePath(path)
 			must.NoError(t, err)
@@ -394,7 +394,7 @@ func TestLocker_executes(t *testing.T) {
 			l := New()
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
-			cmd := exec.Command("tests/fruits/hello.sh")
+			cmd := exec.CommandContext(t.Context(), "tests/fruits/hello.sh")
 			_, err = cmd.CombinedOutput()
 			must.Error(t, err) // no permission
 			fmt.Println("err", err)
@@ -407,7 +407,7 @@ func TestLocker_executes(t *testing.T) {
 			)
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
-			cmd := exec.Command("/usr/bin/bash", "-c", "/usr/bin/echo -n hi")
+			cmd := exec.CommandContext(t.Context(), "/usr/bin/bash", "-c", "/usr/bin/echo -n hi")
 			b, err := cmd.CombinedOutput()
 			must.NoError(t, err)
 			must.Eq(t, "hi", string(b))
@@ -421,7 +421,7 @@ func TestLocker_executes(t *testing.T) {
 			)
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
-			cmd := exec.Command("tests/fruits/hello.sh")
+			cmd := exec.CommandContext(t.Context(), "tests/fruits/hello.sh")
 			_, err = cmd.CombinedOutput()
 			must.Error(t, err)
 		},
@@ -435,7 +435,7 @@ func TestLocker_executes(t *testing.T) {
 			)
 			err := l.Lock(Mandatory)
 			must.NoError(t, err)
-			cmd := exec.Command("tests/fruits/hello.sh")
+			cmd := exec.CommandContext(t.Context(), "tests/fruits/hello.sh")
 			b, err := cmd.CombinedOutput()
 			must.NoError(t, err)
 			must.Eq(t, "so you like fruit?", string(b))
@@ -649,7 +649,7 @@ func TestLocker_mount(t *testing.T) {
 			// setup the mountpoint with a file that should be overridden
 			writeFile(t, "should be overridden", mountpoint, 0o644)
 
-			cmd := exec.Command("mount", "--bind", "/etc/os-release", "--target", mountpoint)
+			cmd := exec.CommandContext(t.Context(), "mount", "--bind", "/etc/os-release", "--target", mountpoint)
 			output, cmdErr := cmd.CombinedOutput()
 			fmt.Println("output", string(output))
 			must.NoError(t, cmdErr, must.Sprintf("mount failure: %s", string(output)))
@@ -680,7 +680,7 @@ func TestLocker_mount(t *testing.T) {
 			must.NoError(t, lockErr)
 
 			// landlock will prevent creating this mount
-			cmd := exec.Command("mount", "--bind", source, "--target", mountpoint)
+			cmd := exec.CommandContext(t.Context(), "mount", "--bind", source, "--target", mountpoint)
 			_, cmdErr := cmd.CombinedOutput()
 			must.ErrorContains(t, cmdErr, "permission denied")
 		},
@@ -744,8 +744,8 @@ func isChildRunner(cases map[string]func()) bool {
 func forkAndRunEachCase(t *testing.T, prefix string, cases map[string]func()) {
 	for name := range cases {
 		arg := fmt.Sprintf("-test.run=%s/%s", prefix, name)
-		cmd := exec.Command(os.Args[0], arg)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("TEST=%s", name))
+		cmd := exec.CommandContext(t.Context(), os.Args[0], arg)
+		cmd.Env = append(os.Environ(), "TEST="+name)
 		b, err := cmd.CombinedOutput()
 		t.Logf("TEST[%s] (arg: %s)\n\t|> %s\n\n", name, arg, string(b))
 		must.NoError(t, err)
