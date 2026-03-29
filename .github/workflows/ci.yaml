@@ -17,7 +17,10 @@ jobs:
           - ubuntu-24.04
           - ubuntu-22.04
           - macos-26
+        cgo: ['1', '0']
     runs-on: ${{matrix.os}}
+    env:
+      CGO_ENABLED: ${{matrix.cgo}}
     steps:
       - uses: actions/checkout@v6
       - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b

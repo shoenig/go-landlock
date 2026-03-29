@@ -5,6 +5,6 @@
 
 package landlock
 
-func addProcTaskRule(fd int) error {
+func addProcTaskRule(_ int) error {
 	return nil
 }
