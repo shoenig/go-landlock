@@ -13,7 +13,7 @@ var (
 	// ErrNotSupported indicates Landlock is not supported on this platform
 	ErrNotSupported = errors.New("landlock not supported on this platform")
 
-	// ErrBug indicates an unexpected error occured
+	// ErrBug indicates an unexpected error occurred
 	ErrBug = errors.New("landlock experienced an unexpected bug")
 )
 
