@@ -4,6 +4,7 @@ set shell := ["bash", "-u", "-c"]
 export GOBIN := `echo $PWD/.bin`
 export GOTOOLCHAIN := 'go1.26.1'
 export scripts := ".github/workflows/scripts"
+export race := if env_var_or_default("CGO_ENABLED", "1") == "1" { "-race" } else { "" }
 
 # print available commands
 [private]
@@ -14,12 +15,12 @@ default:
 [group('testing')]
 [no-cd]
 test unit:
-    go test -v -count=1 -race -run {{unit}} 2>/dev/null
+    go test -v -count=1 {{race}} -run {{unit}} 2>/dev/null
 
 # run tests across the source tree
 [group('testing')]
 tests:
-    go test -count=1 -race ./... 2>/dev/null
+    go test -count=1 {{race}} ./... 2>/dev/null
 
 # vet the source tree
 [group('testing')]
