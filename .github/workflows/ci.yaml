@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           cache: true
           go-version-file: go.mod
